@@ -72,8 +72,12 @@ def update(document_id):
 
     request_data = request.get_json()
     order = request_data.get('order')
+
     if order is not None:
         if order > document.order:
+            documents = PgDocument.query.order_by('order').all()
+            if order > documents[-1].order:
+                abort(400, "order is out of range")
             for i in range(document.order, order):
                 prev_document = PgDocument.query.filter(PgDocument.order == i+1).one()
                 setattr(prev_document, 'order', i)
