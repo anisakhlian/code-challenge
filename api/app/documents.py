@@ -69,20 +69,23 @@ def update(document_id):
         abort(404, "resource not found")
 
     request_data = request.get_json()
-    parent_id = request_data.get('parent_id')
-    if parent_id:
-        parent_document = PgDocument.query.get(parent_id)
-        if not parent_document:
-            abort(404, "resource not found")
-
-    for field in request_data.keys():
-        setattr(document, field, request_data[field])
+    order = request_data.get('order')
+    if order is not None:
+        if order > document.order:
+            for i in range(document.order, order):
+                prev_document = PgDocument.query.filter(PgDocument.order == i+1).one()
+                setattr(prev_document, 'order', i)
+        elif order < document.order:
+            for i in range(order, document.order):
+                prev_document = PgDocument.query.filter(PgDocument.order == i).one()
+                setattr(prev_document, 'order', i+1)
+        setattr(document, 'order', order)
+    else:
+        for field in request_data.keys():
+            setattr(document, field, request_data[field])
 
     db_session.add(document)
     db_session.commit()
-
-    if 'deleted_at' in request_data and document.children:
-        _propagate_delete_status(document, request_data.get('deleted_at'))
 
     return jsonify({'data': document.serialize()}), 200
 
