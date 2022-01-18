@@ -7,18 +7,14 @@ documents_mod = Blueprint('documents', __name__)
 @documents_mod.route('', methods=['POST'])
 def create():
     request_data = request.get_json()
-
-    parent_id = request_data.get('parent_id')
-    if parent_id:
-        parent_document = PgDocument.query.get(parent_id)
-        if not parent_document:
-            abort(404, "resource not found")
-
-    document = PgDocument(
-        title=request_data.get('title', ''),
-        body=request_data.get('body', ''),
-        parent_id=parent_id
-    )
+    documents = PgDocument.query.order_by('order').all()
+    params = {
+        'title': request_data.get('title', ''),
+        'body': request_data.get('body', ''),
+    }
+    if documents:
+        params['order'] = documents[-1].order + 1
+    document = PgDocument(**params)
     db_session.add(document)
     db_session.commit()
 
