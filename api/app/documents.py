@@ -33,9 +33,7 @@ def collection():
     if is_pinned == 'true':
         pin_filter = PgDocument.is_pinned.is_(True)
 
-    documents = PgDocument.query \
-        .filter(PgDocument.parent_id.is_(None)) \
-        .filter(trash_filter)
+    documents = PgDocument.query.filter(trash_filter)
 
     if pin_filter:
         documents = documents.filter(pin_filter)
@@ -52,6 +50,10 @@ def collection():
         documents = documents.order_by(order_by)
 
     documents = documents.all()
+
+    custom = request.args.get('custom')
+    if custom:
+        documents = PgDocument.query.order_by('order').all()
 
     if not documents:
         return jsonify({'data': []}), 200
