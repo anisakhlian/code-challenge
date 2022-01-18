@@ -97,6 +97,10 @@ def delete(document_id):
     document = PgDocument.query.get(document_id)
     if not document:
         abort(404, "resource not found")
+    documents = PgDocument.query.order_by('order').all()
+    for i in range(document.order, documents[-1].order):
+        prev_document = PgDocument.query.filter(PgDocument.order == i + 1).one()
+        setattr(prev_document, 'order', i)
 
     db_session.delete(document)
     db_session.commit()
