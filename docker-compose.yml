@@ -1,0 +1,32 @@
+version: "3"
+services:
+  postgres:
+    image: postgres:13.2
+    container_name: code_challenge_postgres
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=postgres
+    command: postgres -c 'max_connections=200'
+    ports:
+      - 5439:5432
+    networks:
+      - localdockernetwork
+  api:
+    build:
+      context: ./api
+    container_name: code_challenge_api
+    volumes:
+        - ./api:/app
+        - ./api/models:/models
+        - ./api/tests:/tests
+    ports:
+      - 3001:3001
+    networks:
+      - localdockernetwork
+    depends_on:
+      - postgres
+    tty: true
+
+networks:
+  localdockernetwork:
